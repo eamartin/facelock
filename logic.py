@@ -24,15 +24,18 @@ def handle_buffer(buff, image):
     for frame in buff:
         if frame == {}:
             frames['empty'] += 1
-            continue
-        for (x, y, w, h), valid in frame.iteritems():
-            size = float(w + h) / 2.0
-            if size < PRESENT_SIZE:
-                frames['empty'] += 1
-            elif valid:
-                frames['valid'] += 1
-            else:
-                frames['invalid'] += 1
+        elif all(float(face[2] + face[3]) / 2.0 < PRESENT_SIZE for face, valid in frame.items()):
+            frames['empty'] += 1
+
+        close = []
+        for face, valid in frame.items():
+            if float(face[2] + face[3]) / 2.0 > PRESENT_SIZE:
+                close.append((face, valid))
+
+        if any(tup[1] for tup in close):
+            frames['valid'] += 1
+        else:
+            frames['invalid'] += 1
 
     lock_screen = lambda: subprocess.call(['gnome-screensaver-command', '-l'])
 
