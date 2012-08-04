@@ -1,16 +1,12 @@
 import contextlib
 import json
-import os
 from pprint import pprint
 import time
 import urllib
 import urlparse
 import webbrowser
 
-ROOT_DIR = os.environ['HOME'] + '/.facelock/'
-CREDENTIALS = ROOT_DIR + 'credentials.json'
-PICTURES = ROOT_DIR + 'pictures/'
-META = ROOT_DIR + 'meta.json'
+from settings import *
 
 def get_token():
     AUTH_URL = 'https://www.facebook.com/dialog/oauth'
