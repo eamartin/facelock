@@ -159,7 +159,7 @@ def test(clf, pca):
 
 
 def run():
-    CHECK_TIME = 5
+    CHECK_TIME = 3
     clf, pca = load()
 
     cam = cv.CreateCameraCapture(0)

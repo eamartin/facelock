@@ -54,13 +54,18 @@ def handle_buffer(buff, image):
             'key': IMGUR_KEY,
             'image': base64.b64encode(data)
         }
-        r = requests.post(IMGUR_URL, data=imgur)
-        url = r.json['upload']['links']['imgur_page']
+        try:
+            r = requests.post(IMGUR_URL, data=imgur)
+            url = r.json['upload']['links']['imgur_page']
 
-        email = {
-            'to': MY_EMAIL,
-            'subject': 'Laptop Intruder',
-            'text': url
-        }
-        requests.post(EMAIL_URL, data=email)
+            email = {
+                'to': MY_EMAIL,
+                'subject': 'Laptop Intruder',
+                'text': url
+            }
+            requests.post(EMAIL_URL, data=email)
+        except Exception as e:
+            print 'Notification failed'
+            print e
+
         os.system('mpg321 ' + ROOT_DIR + 'siren.mp3')
