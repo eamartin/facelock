@@ -2,6 +2,7 @@ import json
 from pprint import pprint
 
 import cv
+import numpy as np
 
 from settings import *
 
@@ -37,6 +38,7 @@ def match_faces_and_tags(image_size, faces, tags):
     return matches
 
 def train_model():
+    w = cv.NamedWindow('window')
     with open(META) as f:
         meta = json.load(f)
     for entry in meta:
@@ -50,7 +52,15 @@ def train_model():
 
         image = cv.LoadImageM(entry['picture'])
         found = find_faces(image)
-        print match_faces_and_tags(cv.GetSize(image), found, tags)
+        matches = match_faces_and_tags(cv.GetSize(image), found, tags)
+        for (x, y, w, h), label in matches.iteritems():
+            color = (255, 0, 0) if label == 'me' else (0, 255, 0)
+            cv.Rectangle(image, (x, y), (x+w, y+h), cv.RGB(*color))
+            small = cv.GetSubRect(image, (x, y, w, h))
+            print (w, h)
+
+        cv.ShowImage('window', image)
+        cv.WaitKey(0)
 
 
 if __name__ == '__main__':
