@@ -10,7 +10,7 @@ import webbrowser
 ROOT_DIR = os.environ['HOME'] + '/.facelock/'
 CREDENTIALS = ROOT_DIR + 'credentials.json'
 PICTURES = ROOT_DIR + 'pictures/'
-META = ROOT_DIR = 'meta.json'
+META = ROOT_DIR + 'meta.json'
 
 def get_token():
     AUTH_URL = 'https://www.facebook.com/dialog/oauth'
@@ -68,6 +68,7 @@ def get_photos():
         filename = PICTURES + meta['id'] + '.jpg'
         with open(filename, 'w') as f:
             f.write(bits)
+
         meta['picture'] = filename
 
         photos_meta.append(meta)
