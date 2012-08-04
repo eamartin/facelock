@@ -152,7 +152,7 @@ def test(clf, pca):
 
 
 def run():
-    CHECK_TIME = 15
+    CHECK_TIME = 5
     clf, pca = load()
 
     cam = cv.CreateCameraCapture(0)
@@ -188,8 +188,8 @@ def run():
         buff.append(validity)
         if time.time() - start > CHECK_TIME:
             handle_buffer(buff)
-        start = time.time()
-        buff = []
+            start = time.time()
+            buff = []
 
 def get_training_data():
     cam = cv.CreateCameraCapture(0)
