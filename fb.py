@@ -41,6 +41,13 @@ def get_token():
     return response['access_token']
 
 def get_photos():
+    with open(META) as f:
+        data = f.read()
+    if data:
+        redo = raw_input('meta.json already exists, are you sure you want to overwrite?')
+        if redo.lower() != 'y':
+            return
+
     PHOTOS_URL = 'https://graph.facebook.com/me/photos'
     args = {
         'access_token': get_token(),
@@ -72,8 +79,6 @@ def get_photos():
         meta['picture'] = filename
 
         photos_meta.append(meta)
-
-        print 'Retrieved %s' % i
 
     with open(META, 'w') as f:
         json.dump(photos_meta, f)
