@@ -1,3 +1,5 @@
+import base64
+import json
 import os
 from pprint import pprint
 import subprocess
@@ -9,6 +11,7 @@ from settings import *
 EMAIL_URL = 'http://anonymouse.org/cgi-bin/anon-email.cgi'
 MY_EMAIL = '8327971548@messaging.sprintpcs.com'
 INTRUDER_DIR = ROOT_DIR + 'intruders/'
+IMGUR_URL = 'http://api.imgur.com/2/upload.json'
 IMGUR_KEY = '00c8de2c75e534adbf7d5497a8397a88'
 
 def handle_buffer(buff):
@@ -35,8 +38,23 @@ def handle_buffer(buff):
         lock_screen()
     if frames['invalid'] > .7 * len(buff):
         subprocess.call(['vlc -I dummy v4l2:///dev/video0 --video-filter scene --no-audio --scene-path %s --scene-prefix image_prefix --scene-format png vlc://quit --run-time=1' % INTRUDER_DIR])
+
         pic_path = INTRUDER_DIR + os.listdir(INTRUDER_DIR)[0]
+        with open(pic_path, 'rb') as f:
+            data = f.read()
+        os.remove(pic_path)
+
+        imgur = {
+            'key': IMGUR_KEY,
+            'image': base64.b64encode(data)
+        }
+        r = requests.post(IMGUR_URL, data=imgur)
+        url = r.json['upload']['links']['imgur_page']
+
         email = {
             'to': MY_EMAIL,
             'subject': 'Laptop Intruder'
-            'text': '
+            'text': url
+        }
+        requests.post(EMAIL_URL, data=email)
+        lock_screen()
