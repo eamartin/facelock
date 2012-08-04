@@ -42,38 +42,37 @@ def get_token():
 
 def get_photos():
     PHOTOS_URL = 'https://graph.facebook.com/me/photos'
-    args = {'access_token': get_token()}
+    args = {
+        'access_token': get_token(),
+        'limit': 200
+    }
     url = PHOTOS_URL + '?' + urllib.urlencode(args)
     with contextlib.closing(urllib.urlopen(url)) as f:
         data = f.read()
     data = json.loads(data)
     photos_meta = []
-    for i, tagged_photo in enumerate(data):
-        pprint(tagged_photo)
+    for i, tagged_photo in enumerate(data['data']):
         meta = {}
-        try:
-            meta['id']= tagged_photo['id']
-            meta['tags'] = {'other': []}
-            for tag in tagged_photo['tags']['data']:
-                if tag['name'] == 'Eric Martin':  #fix me so hard
-                    meta['tags']['me'] = [tag['x'], tag['y']]
-                else:
-                    meta['tags']['other'].append([tag['x'], tag['y']])
-            picture_url = tagged_photo['images'][1]['source']
+        meta['id']= tagged_photo['id']
+        meta['tags'] = {'other': []}
+        for tag in tagged_photo['tags']['data']:
+            if tag['name'] == 'Eric Martin':  #fix me so hard
+                meta['tags']['me'] = [tag['x'], tag['y']]
+            else:
+                meta['tags']['other'].append([tag['x'], tag['y']])
+        picture_url = tagged_photo['images'][1]['source']
 
-            with contextlib.closing(urlopen(picture_url)) as f:
-                bits = f.read()
+        with contextlib.closing(urllib.urlopen(picture_url)) as f:
+            bits = f.read()
 
-            filename = PICTURES + meta['id'] + '.jpg'
-            with open(filename, 'w') as f:
-                f.write(bits)
-            meta['picture'] = filename
+        filename = PICTURES + meta['id'] + '.jpg'
+        with open(filename, 'w') as f:
+            f.write(bits)
+        meta['picture'] = filename
 
-            photos_meta.append(meta)
+        photos_meta.append(meta)
 
-            print 'Retrieved %s' % i
-        except Exception as e:
-            raise
+        print 'Retrieved %s' % i
 
     with open(META, 'w') as f:
         json.dump(photos_meta, f)
