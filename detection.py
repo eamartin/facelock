@@ -2,6 +2,7 @@ import json
 import cPickle as pickle
 import os
 from pprint import pprint
+import random
 import time
 
 import cv
@@ -48,12 +49,10 @@ def match_faces_and_tags(image_size, faces, tags):
     return matches
 
 def train_model():
+    '''
     with open(META) as f:
         meta = json.load(f)
 
-    faces, labels = pickle.load(open(ROOT_DIR + 'memo'))
-
-    '''
     faces = []
     labels = []
     for entry in meta:
@@ -64,6 +63,8 @@ def train_model():
         for tag in entry['tags']['other']:
             tag = {'type': 'other', 'pos': tag}
             tags.append(tag)
+            if random.random() > .9:
+                tags.append(tag)
 
         image = cv.LoadImageM(entry['picture'])
         found, grayscale = find_faces(image)
@@ -75,10 +76,6 @@ def train_model():
                 cv.Resize(small, fixed_size)
                 faces.append(np.asarray(fixed_size).flatten())
                 labels.append(1.0 if label == 'me' else -1.0)
-
-    with open(ROOT_DIR + 'memo', 'w') as f:
-        pickle.dump((faces, labels), f)
-    '''
 
     for filename in os.listdir(EXTRA_POSITIVE_TRAINING):
         image = cv.LoadImageM(EXTRA_POSITIVE_TRAINING + filename)
@@ -105,10 +102,18 @@ def train_model():
             faces.append(np.asarray(fixed_size).flatten())
             labels.append(-1.0)
 
+    with open(ROOT_DIR + 'memo', 'w') as f:
+        pickle.dump((faces, labels), f)
+    print 'done dumping'
+
+    '''
+    with open(ROOT_DIR + 'memo') as f:
+        faces, labels = pickle.load(f)
+
     faces = np.array(faces)
     X_train, X_test, y_train, y_test = train_test_split(faces, np.array(labels), test_size=.3)
 
-    n_components = 150
+    n_components = 120
     pca = RandomizedPCA(n_components=n_components, whiten=True).fit(X_train)
 
     X_train_pca = pca.transform(X_train)
@@ -119,7 +124,6 @@ def train_model():
         'gamma': [0.0001, 0.0005, 0.001, 0.005, 0.01, 0.1]
     }
     clf = GridSearchCV(SVC(kernel='rbf', class_weight='auto'), param_grid)
-    #clf = KNeighborsClassifier(weights='distance')
     clf = clf.fit(X_train_pca, y_train)
 
     y_pred = clf.predict(X_test_pca)
@@ -131,7 +135,6 @@ def train_model():
     pca = RandomizedPCA(n_components=n_components, whiten=True).fit(faces)
     X_pca = pca.transform(faces)
     clf = SVC(**clf.best_params_).fit(X_pca, np.array(labels))
-    #clf = KNeighborsClassifier(weights='distance').fit(X_pca, np.array(labels))
 
     return clf, pca
 
@@ -187,7 +190,7 @@ def run():
 
         buff.append(validity)
         if time.time() - start > CHECK_TIME:
-            handle_buffer(buff)
+            handle_buffer(buff, frame)
             start = time.time()
             buff = []
 
@@ -209,7 +212,6 @@ def get_training_data():
         cv.ShowImage('window', frame)
         cv.WaitKey(1)
 
-
 def save(clf, pca):
     with open(CLASSIFIER, 'w') as f:
         pickle.dump(clf, f)
@@ -225,5 +227,5 @@ def load():
 
 
 if __name__ == '__main__':
-    #save(*train_model())
-    run()
+    save(*train_model())
+    #run()

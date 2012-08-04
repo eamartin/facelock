@@ -4,6 +4,7 @@ import os
 from pprint import pprint
 import subprocess
 
+import cv
 import requests
 
 from settings import *
@@ -14,7 +15,7 @@ INTRUDER_DIR = ROOT_DIR + 'intruders/'
 IMGUR_URL = 'http://api.imgur.com/2/upload.json'
 IMGUR_KEY = '00c8de2c75e534adbf7d5497a8397a88'
 
-def handle_buffer(buff):
+def handle_buffer(buff, image):
     PRESENT_SIZE = 130 # smaller than this and you don't count
     # thats what she said
 
@@ -34,15 +35,20 @@ def handle_buffer(buff):
                 frames['invalid'] += 1
 
     lock_screen = lambda: subprocess.call(['gnome-screensaver-command', '-l'])
+
+    if frames['valid'] > .8 * len(buff):
+        subprocess.call(['gnome-screensaver-command', '-d'])
+        return
+
     if frames['empty'] > .5 * len(buff) and frames['valid'] < .1 * len(buff):
         lock_screen()
-    if frames['invalid'] > .7 * len(buff):
-        subprocess.call(['vlc -I dummy v4l2:///dev/video0 --video-filter scene --no-audio --scene-path %s --scene-prefix image_prefix --scene-format png vlc://quit --run-time=1' % INTRUDER_DIR])
 
-        pic_path = INTRUDER_DIR + os.listdir(INTRUDER_DIR)[0]
+    if frames['invalid'] > -.65 * len(buff):
+        lock_screen()
+        pic_path = INTRUDER_DIR + 'intruder.jpg'
+        cv.SaveImage(pic_path, image)
         with open(pic_path, 'rb') as f:
             data = f.read()
-        os.remove(pic_path)
 
         imgur = {
             'key': IMGUR_KEY,
@@ -53,8 +59,8 @@ def handle_buffer(buff):
 
         email = {
             'to': MY_EMAIL,
-            'subject': 'Laptop Intruder'
+            'subject': 'Laptop Intruder',
             'text': url
         }
         requests.post(EMAIL_URL, data=email)
-        lock_screen()
+        os.system('mpg321 ' + ROOT_DIR + 'siren.mp3')
