@@ -1,6 +1,8 @@
 import datetime
 import json
+import cPickle as pickle
 from pprint import pprint
+import time
 
 import cv
 import numpy as np
@@ -88,9 +90,76 @@ def train_model():
     clf = clf.fit(X_train_pca, y_train)
 
     y_pred = clf.predict(X_test_pca)
+    print y_pred
     print confusion_matrix(y_test, y_pred)
-    return clf.best_estimator_
+    return clf.best_estimator_, pca
+
+def test(clf, pca):
+    image = cv.LoadImageM(PICTURES + '10150462662796229.jpg')
+    faces, grayscale = find_faces(image)
+    results = []
+    for (x, y, w, h), _ in faces:
+        face = (x, y, w, h)
+        small = cv.GetSubRect(grayscale, face)
+        fixed_size = cv.CreateMat(80, 80, cv.CV_8UC1)
+        cv.Resize(small, fixed_size)
+
+        vec = np.asarray(fixed_size).flatten()
+        vec_pca = pca.transform(vec)
+        results.append(clf.predict(vec_pca))
+    print results
+
+
+def run():
+    clf, pca = load()
+
+    cam = cv.CreateCameraCapture(0)
+    cv.SetCaptureProperty(cam, cv.CV_CAP_PROP_FRAME_WIDTH, 640)
+    cv.SetCaptureProperty(cam, cv.CV_CAP_PROP_FRAME_HEIGHT, 480)
+
+    while True:
+        frame = cv.QueryFrame(cam)
+        faces, grayscale = find_faces(frame)
+        results = []
+        for (x, y, w, h), _ in faces:
+            face = (x, y, w, h)
+            small = cv.GetSubRect(grayscale, face)
+            fixed_size = cv.CreateMat(80, 80, cv.CV_8UC1)
+            cv.Resize(small, fixed_size)
+
+            '''
+            cv.ShowImage('window', fixed_size)
+            cv.WaitKey()
+            '''
+
+            vec = np.asarray(fixed_size).flatten()
+            vec_pca = pca.transform(vec)
+            results.append(clf.predict(vec_pca)[0])
+        print 1.0 in results
+        time.sleep(5)
+
+def save(clf, pca):
+    with open(CLASSIFIER, 'w') as f:
+        pickle.dump(clf, f)
+    with open(PCA_FILE, 'w') as f:
+        pickle.dump(pca, f)
+
+def load():
+    with open(CLASSIFIER) as f:
+        clf = pickle.load(f)
+    with open(PCA_FILE) as f:
+        pca = pickle.load(f)
+    return clf, pca
 
 
 if __name__ == '__main__':
-    train_model()
+    run()
+    '''
+    clf, pca = train_model()
+    print 'From memory'
+    test(clf, pca)
+    save(clf, pca)
+    clf2, pca2 = load()
+    print 'From disk'
+    test(clf2, pca2)
+    '''
