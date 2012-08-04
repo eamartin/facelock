@@ -1,12 +1,13 @@
 import contextlib
 import json
 import os
+from pprint import pprint
 import time
 import urllib
 import urlparse
 import webbrowser
 
-ROOT_DIR = os.environ['HOME'] + '/.facelook/'
+ROOT_DIR = os.environ['HOME'] + '/.facelock/'
 CREDENTIALS = ROOT_DIR + 'credentials.json'
 PICTURES = ROOT_DIR + 'pictures/'
 META = ROOT_DIR = 'meta.json'
@@ -32,6 +33,7 @@ def get_token():
     webbrowser.open(url)
     time.sleep(2)
     response = urlparse.parse_qs(raw_input('Your token?\t'))
+    response = dict((k, v[0]) for k, v in response.iteritems())
     response['expires'] = int(response['expires_in']) + int(time.time())
 
     with open(CREDENTIALS, 'w') as f:
@@ -47,6 +49,7 @@ def get_photos():
     data = json.loads(data)
     photos_meta = []
     for i, tagged_photo in enumerate(data):
+        pprint(tagged_photo)
         meta = {}
         try:
             meta['id']= tagged_photo['id']
@@ -70,7 +73,7 @@ def get_photos():
 
             print 'Retrieved %s' % i
         except Exception as e:
-            print e
+            raise
 
     with open(META, 'w') as f:
         json.dump(photos_meta, f)
