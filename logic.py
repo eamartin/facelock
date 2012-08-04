@@ -43,7 +43,7 @@ def handle_buffer(buff, image):
     if frames['empty'] > .5 * len(buff) and frames['valid'] < .1 * len(buff):
         lock_screen()
 
-    if frames['invalid'] > -.65 * len(buff):
+    if frames['invalid'] > .65 * len(buff):
         lock_screen()
         pic_path = INTRUDER_DIR + 'intruder.jpg'
         cv.SaveImage(pic_path, image)

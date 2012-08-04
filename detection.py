@@ -9,6 +9,7 @@ import cv
 import numpy as np
 from sklearn.cross_validation import train_test_split
 from sklearn.decomposition import RandomizedPCA
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.grid_search import GridSearchCV
 from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.neighbors import KNeighborsClassifier
@@ -49,7 +50,6 @@ def match_faces_and_tags(image_size, faces, tags):
     return matches
 
 def train_model():
-    '''
     with open(META) as f:
         meta = json.load(f)
 
@@ -63,7 +63,7 @@ def train_model():
         for tag in entry['tags']['other']:
             tag = {'type': 'other', 'pos': tag}
             tags.append(tag)
-            if random.random() > .9:
+            if random.random() > .8:
                 tags.append(tag)
 
         image = cv.LoadImageM(entry['picture'])
@@ -78,6 +78,8 @@ def train_model():
                 labels.append(1.0 if label == 'me' else -1.0)
 
     for filename in os.listdir(EXTRA_POSITIVE_TRAINING):
+        if random.random() > .6:
+            continue
         image = cv.LoadImageM(EXTRA_POSITIVE_TRAINING + filename)
         found, grayscale = find_faces(image)
         if len(found) != 1:
@@ -109,6 +111,8 @@ def train_model():
     '''
     with open(ROOT_DIR + 'memo') as f:
         faces, labels = pickle.load(f)
+    '''
+
 
     faces = np.array(faces)
     X_train, X_test, y_train, y_test = train_test_split(faces, np.array(labels), test_size=.3)
@@ -227,5 +231,5 @@ def load():
 
 
 if __name__ == '__main__':
-    save(*train_model())
-    #run()
+    #save(*train_model())
+    run()
